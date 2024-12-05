@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Login - File Management System</title>
+    <link rel="icon" type="image/x-icon" href="/logo.png">
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 400px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: #141414;;
         }
         .login-container {
-            background-color: white;
+            background-color: rgb(37, 37, 37);
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: white;
+            border: 1px solid #00ff0d;
         }
         form {
             display: flex;
@@ -28,9 +31,9 @@
             border-radius: 4px;
         }
         button {
-            background-color: #007bff;
+            background-color: #000000;
             color: white;
-            border: none;
+            border: #00ff0d solid 1px;
             padding: 10px;
             border-radius: 4px;
             cursor: pointer;
@@ -43,18 +46,18 @@
             text-align: center;
             margin-top: 10px;
         }
+        a {
+            text-decoration: none;
+            color: aqua;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h2>Login</h2>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
+        
                     <div class="flash-message">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                
         <form method="POST">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
