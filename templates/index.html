@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Management System</title>
+    <style>
+        body {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #141414;
+  transition: background-color 0.3s; /* add a smooth transition effect */
+}
+
+.upload-container {
+  background-color: rgb(43, 43, 43);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: 1px solid #ddd; /* add a subtle border */
+}
+ /* Log Out Button - Positioned at the top-right corner */
+ .logout-button {
+            float: right;
+            top: 20px; /* Adjust the distance from the top */
+            right: 20px; /* Adjust the distance from the right */
+            background: #000000;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: solid 1px #00ff0d;
+            text-decoration: none;
+        }
+
+        .logout-button:hover {
+            background-color: #0056b3;
+        }
+
+#fileList {
+  margin-top: 20px;
+}
+
+#fileInput {
+    padding: 20px;
+    background-color: #000000;
+    border-radius: 20px;
+    border: solid 1px #00ff0d;
+}
+
+.file-item {
+    color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: rgb(43, 43, 43);
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* add a subtle shadow */
+}
+
+.file-actions {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  background-color: #000000;
+  color: white;
+  border: solid 1px #00ff0d;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s; /* add a smooth transition effect */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+input[type="file"] {
+  margin-bottom: 10px;
+}
+
+.file-details {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s; /* add a smooth transition effect */
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow: auto;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* add a subtle shadow */
+}
+
+.modal-close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  transition: color 0.3s; /* add a smooth transition effect */
+}
+
+.modal-close:hover {
+  color: black;
+}
+
+#previewContent img {
+  max-width: 100%;
+  max-height: 600px;
+  object-fit: contain;
+  border-radius: 4px; /* add a subtle border radius */
+}
+
+#previewContent pre {
+  max-height: 600px;
+  overflow: auto;
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 4px; /* add a subtle border radius */
+}
+
+#notificationModal .modal-content {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* add a subtle shadow */
+}
+
+#notificationModal .modal-message {
+  margin: 20px 0;
+  font-size: 18px;
+  color: #666; /* add a subtle text color */
+}
+
+#notificationModal .modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Add some animations to make it more engaging */
+.upload-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.file-item:hover {
+  background-color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+.modal-content {
+  animation: fadeIn 0.3s; /* add a fade-in animation */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+} 
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>SecureBox Storage App</h1>
+        <a href="{{ url_for('user_logout') }}" class="logout-button">Log Out</a>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file">
+            <input type="text" id="fileDescription" name="description" placeholder="File description">
+            <button type="submit">Upload File</button>
+        </form>
+    </div>
+
+    <div id="fileList">
+        <h2 style="color: white;">Uploaded Files</h2>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePreview()">&times;</span>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeNotification()">&times;</span>
+            <div class="modal-message" id="notificationMessage"></div>
+            <div class="modal-buttons">
+                <button onclick="closeNotification()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility function to show notification modal
+        function showNotification(message) {
+            const notificationModal = document.getElementById('notificationModal');
+            const notificationMessage = document.getElementById('notificationMessage');
+            
+            notificationMessage.textContent = message;
+            notificationModal.style.display = 'flex';
+        }
+
+        // Close notification modal
+        function closeNotification() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const descriptionInput = document.getElementById('fileDescription');
+            
+            if (!fileInput.files.length) {
+                showNotification('Please select a file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('description', descriptionInput.value || '');
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showNotification(data.message);
+                    loadFiles();
+                    // Reset form
+                    fileInput.value = '';
+                    descriptionInput.value = '';
+                } else {
+                    showNotification(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Upload failed');
+            });
+        });
+
+        function loadFiles() {
+            const fileList = document.getElementById('fileList');
+            
+            fetch('/files')
+            .then(response => response.json())
+            .then(files => {
+                fileList.innerHTML = '<h2 style="color: white;">Uploaded Files</h2>';
+                
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+                    fileItem.innerHTML = `
+                        <div class="file-details">
+                            <strong>${file.filename}</strong>
+                            <p>${file.description || 'No description'}</p>
+                            <small>
+                                Size: ${formatFileSize(file.filesize)} | 
+                                Type: ${file.mime_type} | 
+                                Uploaded: ${new Date(file.upload_date).toLocaleString()}
+                            </small>
+                        </div>
+                        <div class="file-actions">
+                            ${file.is_previewable ? 
+                                `<button onclick="viewFile('${file.filename}')">View</button>` : 
+                                ''
+                            }
+                            <button onclick="downloadFile('${file.filename}')">Download</button>
+                            <button onclick="deleteFile('${file.filename}')">Delete</button>
+                            <form class="share-form" onsubmit="shareFile(event, '${file.filename}')">
+                                <input type="text" placeholder="Share with user" class="share-username">
+                                <button type="submit">Share</button>
+                            </form>
+                        </div>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            });
+        }
+
+        // Close preview
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        // View file
+        function viewFile(filename) {
+            fetch(`/view/${filename}`)
+            .then(response => response.json())
+            .then(data => {
+                const previewModal = document.getElementById('previewModal');
+                const previewContent = document.getElementById('previewContent');
+                
+                // Clear previous content
+                previewContent.innerHTML = '';
+                
+                // Handle different file types
+                switch(data.type) {
+                    case 'image':
+                        const img = document.createElement('img');
+                        img.src = `data:${data.mime_type};base64,${data.content}`;
+                        previewContent.appendChild(img);
+                        break;
+                    
+                    case 'text':
+                        const pre = document.createElement('pre');
+                        pre.textContent = data.content;
+                        previewContent.appendChild(pre);
+                        break;
+                    
+                    case 'pdf':
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `data:application/pdf;base64,${data.content}`;
+                        iframe.width = '100%';
+                        iframe.height = '600px';
+                        previewContent.appendChild(iframe);
+                        break;
+                    
+                    case 'unsupported':
+                        previewContent.innerHTML = `<p>${data.message}</p>`;
+                        break;
+                    
+                    case 'error':
+                        previewContent.innerHTML = `<p>Error: ${data.message}</p>`;
+                        break;
+                }
+                
+                // Show modal
+                previewModal.style.display = 'flex';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to preview file: ' + error.message);
+            });
+        }
+
+        // Download file
+        function downloadFile(filename) {
+            window.location.href = `/download/${filename}`;
+        }
+
+        // Delete file
+        function deleteFile(filename) {
+            fetch(`/delete/${filename}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showNotification(data.message);
+                    loadFiles();
+                } else {
+                    showNotification(data.error);
+                }
+            });
+        }
+
+        // Share file
+        function shareFile(event, filename) {
+            event.preventDefault();
+            const shareInput = event.target.querySelector('.share-username');
+            const username = shareInput.value.trim();
+
+            if (!username) {
+                showNotification('Please enter a username to share with');
+                return;
+            }
+
+            fetch(`/share/${filename}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shared_with: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showNotification(data.message);
+                } else {
+                    showNotification(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to share file');
+            });
+        }
+
+        // File size formatting
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // Initial load
+        loadFiles();
+    </script>
+</body>
+</html>
